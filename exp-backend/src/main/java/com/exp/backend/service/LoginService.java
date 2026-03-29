@@ -1,6 +1,8 @@
 package com.exp.backend.service;
 
 import com.exp.backend.aop.MessageInterface;
+import com.exp.backend.exceptions.local.UserNotFoundException;
+import com.exp.backend.exceptions.local.UsernameOrPasswordIncorrectException;
 import com.exp.backend.model.LoginModel;
 import com.exp.backend.model.UserModel;
 import com.exp.backend.repo.UserRepository;
@@ -11,6 +13,7 @@ import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -68,9 +71,10 @@ public class LoginService implements LoginServiceImpl {
      */
     @MessageInterface
     @Override
-    public ResponseEntity<Map<String, Object>> login(LoginModel loginModel, HttpServletResponse response) {
+    public ResponseEntity<Map<String, Object>> login(LoginModel loginModel,
+                                                     HttpServletResponse response)
+    throws UserNotFoundException,UsernameOrPasswordIncorrectException {
         Optional<UserModel> userModel = userRepository.findByEmail(loginModel.getEmail());
-        try {
             /**
              *
              *
@@ -78,7 +82,7 @@ public class LoginService implements LoginServiceImpl {
              */
             if (userModel.isEmpty()) {
                 logger.error("user not found. USER : {}",loginModel.getEmail());
-                throw new RuntimeException("User Not Found!");
+                throw new UserNotFoundException("User Not Found!");
             }
 
             /**
@@ -137,23 +141,10 @@ public class LoginService implements LoginServiceImpl {
                         .header(HttpHeaders.SET_COOKIE,uniqueId.toString())
                                         .body(responseHelperMethods.getLoginResponseHelper(
                         LocalDateTime.now(),
-                        "200"));
+                                                HttpStatus.OK));
 
-            }else throw new RuntimeException("Username or Password is Wrong.");
-            /**
-             *
-             *
-             *
-             *
-             *
-             */
-        }catch (Exception e) {
-                return ResponseEntity.badRequest().body(
-                        responseHelperMethods.getRegistrationResponseHelper(
-                                e.getMessage(),
-                                "400",
-                                LocalDateTime.now()));
-        }
+            }else
+                throw new UsernameOrPasswordIncorrectException("Username or Password is Wrong.");
 
     }
 }

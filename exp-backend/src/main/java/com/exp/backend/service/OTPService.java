@@ -1,6 +1,8 @@
 package com.exp.backend.service;
 
 import com.exp.backend.aop.MessageInterface;
+import com.exp.backend.exceptions.local.OTPSentUnsuccessfulException;
+import com.exp.backend.exceptions.local.UserAlreadyExistException;
 import com.exp.backend.model.UserModel;
 import com.exp.backend.repo.UserRepository;
 import com.exp.backend.template.helpers.ResponseHelperMethods;
@@ -8,6 +10,7 @@ import com.exp.backend.template.interfaces.OTPServicePrint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -75,17 +78,13 @@ public class OTPService implements OTPServicePrint {
      */
     @MessageInterface
     @Override
-    public ResponseEntity<Map<String,Object>> otpGenerator(UserModel userModel) {
+    public ResponseEntity<Map<String,Object>> otpGenerator(UserModel userModel)
+            throws UserAlreadyExistException,OTPSentUnsuccessfulException {
 
         String email = userModel.getEmail();
         if(userExistOrNot(email)) {
             logger.error("user already exist with email. USER : {}", userModel.getEmail());
-            return ResponseEntity.ok(responseHelperMethods
-                    .getRegistrationResponseHelper(
-                            USER_ALREADY_EXIST,
-                            "409",
-                            LocalDateTime.now()
-                    ));
+            throw new UserAlreadyExistException(USER_ALREADY_EXIST);
         }
 
         /**
@@ -117,15 +116,10 @@ public class OTPService implements OTPServicePrint {
              *
              */
 
-        }catch(RuntimeException exception) {
-            Map<String,Object> res = responseHelperMethods
-                    .getRegistrationResponseHelper(
-                            EMAIL_NOT_FOUND,
-                            "404",
-                            LocalDateTime.now()
-                     );
+        }catch(Exception exception) {
+
             logger.error("OTP is not sent user due to internal issue. USER : {}",userModel.getEmail());
-            return ResponseEntity.ok(res);
+            throw new OTPSentUnsuccessfulException(EMAIL_NOT_FOUND);
         }
 
 
@@ -139,7 +133,7 @@ public class OTPService implements OTPServicePrint {
         return ResponseEntity.ok(responseHelperMethods
                 .getRegistrationResponseHelper(
                         OTP_SENT_SUCCESSFULLY,
-                        "200",
+                        HttpStatus.OK,
                         LocalDateTime.now()
                 ));
     }

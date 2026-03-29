@@ -1,15 +1,20 @@
 package com.exp.backend.service;
 
 import com.exp.backend.config.UserDetail;
+import com.exp.backend.exceptions.local.TokenIsNotValidException;
+import com.exp.backend.exceptions.local.UnauthorizedUserException;
+import com.exp.backend.exceptions.local.UsernameOrPasswordIncorrectException;
 import com.exp.backend.template.helpers.HelperComponentForToken;
 import com.exp.backend.template.helpers.ResponseHelperMethods;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -31,10 +36,11 @@ public class RefreshService {
         this.responseHelperMethods = responseHelperMethods;
     }
 
-    public ResponseEntity<Map<String,Object>> refreshToken(String refreshToken) {
+    public ResponseEntity<Map<String,Object>> refreshToken(String refreshToken)
+            throws TokenIsNotValidException {
 
         if(refreshToken == null || refreshToken.isBlank()) {
-            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+            throw new TokenIsNotValidException( "Token is Not Valid");
         }
 
         try {
@@ -44,7 +50,7 @@ public class RefreshService {
             UserDetails userDetails = userDetail.loadUserByUsername(userName);
 
             if(!helperComponentForToken.validateToken(refreshToken, userDetails)) {
-                return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+                throw new TokenIsNotValidException("Token is not valid");
             }
 
             String newAccessToken =
@@ -61,10 +67,10 @@ public class RefreshService {
                     .header(HttpHeaders.SET_COOKIE, accessToken.toString())
                     .body(responseHelperMethods.getLoginResponseHelper(
                             LocalDateTime.now(),
-                            "200"));
+                            HttpStatus.OK));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+            throw new TokenIsNotValidException("Token is not Valid");
         }
     }
 }

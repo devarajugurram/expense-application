@@ -1,6 +1,7 @@
 package com.exp.backend.template.helpers;
 
 import com.exp.backend.aop.MessageInterface;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -25,7 +26,7 @@ public class ResponseHelperMethods {
      */
     @MessageInterface
     public Map<String,Object> getRegistrationResponseHelper(String message,
-                                                            String code,
+                                                            HttpStatus code,
                                                             LocalDateTime localDateTime) {
         Map<String,Object> result = new HashMap<>();
         result.put("message",message);
@@ -44,7 +45,7 @@ public class ResponseHelperMethods {
     @MessageInterface
     public Map<String,Object> getLoginResponseHelper(
                                                      LocalDateTime localDateTime,
-                                                     String code) {
+                                                     HttpStatus code) {
         Map<String,Object> result = new HashMap<>();
         result.put("status",code);
         result.put("timestamp",localDateTime);

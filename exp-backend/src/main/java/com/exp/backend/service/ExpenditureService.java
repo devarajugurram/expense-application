@@ -1,5 +1,8 @@
 package com.exp.backend.service;
 
+import com.exp.backend.exceptions.local.ExpenseNotAvailableException;
+import com.exp.backend.exceptions.local.ExpenseNotCreatedException;
+import com.exp.backend.exceptions.local.ExpenseNotFoundException;
 import com.exp.backend.model.Expense;
 import com.exp.backend.model.ExpenseModel;
 import com.exp.backend.repo.ExpenseRepository;
@@ -52,19 +55,17 @@ public class ExpenditureService {
      */
     public ResponseEntity<Map<String,Object>> addExpense(
             ExpenseModel expenseModel,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws ExpenseNotCreatedException{
         try{
             expenseModel.setLocalDateTime(LocalDateTime.now());
             long id = extractToken(request);
             expenseModel.setUserId(id);
             expenseRepository.save(expenseModel);
         }catch(Exception ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    responseHelperMethods.getRegistrationResponseHelper(EXPENSE_NOT_CREATED,"400", LocalDateTime.now())
-            );
+            throw new ExpenseNotCreatedException(EXPENSE_NOT_CREATED);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                responseHelperMethods.getRegistrationResponseHelper(EXPENSE_CREATED,"201", LocalDateTime.now())
+                responseHelperMethods.getRegistrationResponseHelper(EXPENSE_CREATED,HttpStatus.CREATED, LocalDateTime.now())
         );
     }
 
@@ -88,14 +89,12 @@ public class ExpenditureService {
 
             List<ExpenseModel> monthList =
                     expenseRepository.findAllByDate(startDate, endDate, userId);
-            System.out.println(monthList);
             List<Expense> month = expenseModelConvertedToExpense.convertToExpense(monthList);
-            System.out.println(month);
             return ResponseEntity.status(HttpStatus.OK).body(month);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+
+            throw new ExpenseNotFoundException("Expense Not Found");
         }
     }
 
@@ -117,16 +116,12 @@ public class ExpenditureService {
             model.setCategory(expense.getCategory());
             expenseRepository.save(model);
         }catch(Exception ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(responseHelperMethods.getRegistrationResponseHelper(
-                            EXPENSE_NOT_AVAILABLE,
-                            "400",
-                            LocalDateTime.now()));
+            throw new ExpenseNotAvailableException(EXPENSE_NOT_AVAILABLE);
         }
         return ResponseEntity.status(HttpStatus.OK)
                 .body(responseHelperMethods.getRegistrationResponseHelper(
                         EXPENSE_UPDATED_SUCCESSFULLY,
-                        "200",
+                        HttpStatus.OK,
                         LocalDateTime.now()
                 ));
     }
@@ -147,16 +142,12 @@ public class ExpenditureService {
             model.setActive(!model.isActive());
             expenseRepository.save(model);
         }catch(Exception ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(responseHelperMethods.getRegistrationResponseHelper(
-                            EXPENSE_NOT_AVAILABLE,
-                            "400",
-                            LocalDateTime.now()));
+            throw new ExpenseNotAvailableException(EXPENSE_NOT_AVAILABLE);
         }
         return ResponseEntity.status(HttpStatus.OK)
                 .body(responseHelperMethods.getRegistrationResponseHelper(
                         EXPENSE_DELETED_SUCCESSFULLY,
-                        "200",
+                        HttpStatus.OK,
                         LocalDateTime.now()
                 ));
     }

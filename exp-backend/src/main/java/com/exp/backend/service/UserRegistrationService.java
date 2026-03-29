@@ -1,6 +1,9 @@
 package com.exp.backend.service;
 
 import com.exp.backend.aop.MessageInterface;
+import com.exp.backend.exceptions.local.OTPDidNotMatchException;
+import com.exp.backend.exceptions.local.OTPTimeoutException;
+import com.exp.backend.exceptions.local.UserNotFoundException;
 import com.exp.backend.model.OTPModel;
 import com.exp.backend.model.UserModel;
 import com.exp.backend.repo.UserRepository;
@@ -9,6 +12,7 @@ import com.exp.backend.template.interfaces.UserRegistrationServicePrint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -70,54 +74,50 @@ public class UserRegistrationService implements UserRegistrationServicePrint {
      */
     @MessageInterface
     @Override
-    public ResponseEntity<Map<String,Object>> registerUser(OTPModel otpModel) {
+    public ResponseEntity<Map<String,Object>> registerUser(OTPModel otpModel)
+            throws UserNotFoundException,OTPDidNotMatchException {
+
         String otp = Objects.requireNonNull(cacheManager.getCache("otpCache"))
                 .get(otpModel.getEmail(),String.class);
+
         otp = otp != null ? otp : "1";
+
         if(!otp.equals(otpModel.getOtp())) {
             logger.info("OTP did not match. USER : {}", otpModel.getEmail());
-            return ResponseEntity.ok(
-                    responseHelperMethods.getRegistrationResponseHelper(
-                            OTP_NOT_MATCH,
-                            "401",
-                            LocalDateTime.now()
-                    ));
+            throw new OTPDidNotMatchException(OTP_NOT_MATCH);
         }
         UserModel userModel = Objects.requireNonNull(cacheManager.getCache("userCache"))
                 .get(otpModel.getEmail(), UserModel.class);
-        try {
-            assert userModel != null;
-        }catch(Exception ignored) {
+
+        if(userModel == null) {
             logger.error("exception raised due to OTP `Not Available or Timeout`. USER : {}", otpModel.getEmail());
-            return ResponseEntity.ok(responseHelperMethods.getRegistrationResponseHelper(
-                    SOMETHING_WENT_WRONG,
-                    "500",
-                    LocalDateTime.now()
-            ));
+            throw new UserNotFoundException(SOMETHING_WENT_WRONG);
         }
 
         Map<String,Object> result;
-        System.out.println("Before : "+userModel.getUserDetailsModel().getPassword());
+
         userModel.getUserDetailsModel()
                     .setPassword(passwordEncoder.encode(
                             userModel.getUserDetailsModel().getPassword()
                     ));
-        System.out.println("After: " + userModel.getUserDetailsModel().getPassword());
+
         userModel.setCreatedAt(LocalDateTime.now());
+
         userRepository.save(userModel);
+
         Objects.requireNonNull(cacheManager.getCache("otpCache"))
                 .evict(otpModel.getEmail());
 
         Objects.requireNonNull(cacheManager.getCache("userCache"))
                 .evict(otpModel.getEmail());
+
         result = responseHelperMethods.getRegistrationResponseHelper(
                     USER_CREATED_SUCCESSFULLY,
-                    "201",
+                    HttpStatus.CREATED,
                     userModel.getCreatedAt());
+
         logger.info("OTP verification is successful. User Id Created. USER : {}", otpModel.getEmail());
+
         return ResponseEntity.ok(result);
     }
-
-
-
 }

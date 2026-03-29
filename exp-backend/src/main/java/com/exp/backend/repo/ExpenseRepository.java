@@ -19,6 +19,7 @@ public interface ExpenseRepository extends
             nativeQuery = true
     )
     List<ExpenseModel> findAllByDate(@Param("startDate") LocalDateTime startDate,@Param("endDate") LocalDateTime endDate,@Param("user") long user);
+    List<ExpenseModel> findAllById(long id);
 
     Optional<ExpenseModel> findById(long id);
 }

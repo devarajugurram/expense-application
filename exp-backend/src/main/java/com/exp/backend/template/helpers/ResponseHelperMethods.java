@@ -1,5 +1,6 @@
 package com.exp.backend.template.helpers;
 
+import com.exp.backend.aop.MessageInterface;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -22,13 +23,31 @@ public class ResponseHelperMethods {
      * @param localDateTime success or failure timestamp.
      * @return Map it is sued to return customized map for response.
      */
-    public Map<String,String> getRegistrationResponseHelper(String message,
+    @MessageInterface
+    public Map<String,Object> getRegistrationResponseHelper(String message,
                                                             String code,
                                                             LocalDateTime localDateTime) {
-        Map<String,String> result = new HashMap<>();
+        Map<String,Object> result = new HashMap<>();
         result.put("message",message);
         result.put("status",code);
         result.put("timestamp",localDateTime+"");
+        return result;
+    }
+
+    /**
+     *
+     * @param localDateTime
+     * @param code
+     * @return
+     */
+
+    @MessageInterface
+    public Map<String,Object> getLoginResponseHelper(
+                                                     LocalDateTime localDateTime,
+                                                     String code) {
+        Map<String,Object> result = new HashMap<>();
+        result.put("status",code);
+        result.put("timestamp",localDateTime);
         return result;
     }
 }

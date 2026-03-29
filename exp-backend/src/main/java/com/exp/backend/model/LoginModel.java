@@ -3,7 +3,6 @@ package com.exp.backend.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 
 import java.util.Objects;
@@ -12,7 +11,6 @@ public class LoginModel {
     @Email
     @NotBlank(message = "Email is missing! :(")
     private String email;
-    @Size(min = 8,max = 20)
     @NotBlank(message = "Password is missing! :(")
     private String password;
     @NotNull
@@ -32,6 +30,14 @@ public class LoginModel {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isRemember() {
+        return isRemember;
+    }
+
+    public void setRemember(boolean remember) {
+        isRemember = remember;
     }
 
     @Override

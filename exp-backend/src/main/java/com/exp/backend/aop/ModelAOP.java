@@ -45,10 +45,11 @@ public class ModelAOP {
      */
 
     @Around("@annotation(messageInterface)")
-    protected Object checker(ProceedingJoinPoint pjp,messageInterface messageInterface) throws Throwable{
-        logger.info(messageInterface.value());
+    protected Object checker(ProceedingJoinPoint pjp,
+                             MessageInterface messageInterface) throws Throwable{
+        logger.info("Before Entering Method : " + pjp.getSignature().getName() + ", value = " + messageInterface.value());
         Object res = pjp.proceed();
-        logger.info("controller exit");
+        logger.info("Before Exited Method : " + pjp.getSignature().getName() + ", value = " + messageInterface.value());
         return res;
     }
 }

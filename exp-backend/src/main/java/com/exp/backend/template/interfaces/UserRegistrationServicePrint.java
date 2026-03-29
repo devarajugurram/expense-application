@@ -19,5 +19,5 @@ public interface UserRegistrationServicePrint {
      * @param otpModel It holds data in the form of object.
      * @return ResponseEntity method respond in the form of Map.
      */
-    ResponseEntity<Map<String,String>> registerUser(OTPModel otpModel);
+    ResponseEntity<Map<String,Object>> registerUser(OTPModel otpModel);
 }

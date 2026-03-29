@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface messageInterface {
+public @interface MessageInterface {
     /**
      * MethodName - value
      * @return String message need to be shown for the method which the current interface is applying.

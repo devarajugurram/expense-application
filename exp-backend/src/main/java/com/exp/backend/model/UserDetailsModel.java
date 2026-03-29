@@ -38,7 +38,6 @@ public class UserDetailsModel {
 
     @NotBlank(message = "password is missing")
     @Column(name = "user_password",nullable = false)
-    @Size(min = 8, max = 20)
     private String password;
 
     @Column(name = "user_address")

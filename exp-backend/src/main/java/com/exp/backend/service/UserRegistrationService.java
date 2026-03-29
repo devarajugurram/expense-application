@@ -1,11 +1,13 @@
 package com.exp.backend.service;
 
-import com.exp.backend.aop.messageInterface;
+import com.exp.backend.aop.MessageInterface;
 import com.exp.backend.model.OTPModel;
 import com.exp.backend.model.UserModel;
 import com.exp.backend.repo.UserRepository;
 import com.exp.backend.template.helpers.ResponseHelperMethods;
 import com.exp.backend.template.interfaces.UserRegistrationServicePrint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
+
 
 import static com.exp.backend.template.strings.TemplateStrings.OTP_NOT_MATCH;
 import static com.exp.backend.template.strings.TemplateStrings.USER_CREATED_SUCCESSFULLY;
@@ -28,6 +31,8 @@ import static com.exp.backend.template.strings.TemplateStrings.SOMETHING_WENT_WR
  */
 @Service
 public class UserRegistrationService implements UserRegistrationServicePrint {
+
+    private final Logger logger = LoggerFactory.getLogger(UserRegistrationService.class);
 
     /**
      * Variables - userRepository,cacheManager,passwordEncoder
@@ -63,13 +68,14 @@ public class UserRegistrationService implements UserRegistrationServicePrint {
      * @param otpModel POJO class for temporary data holder.
      * @return ResponseEntity It respond in the form of HashMap
      */
-    @messageInterface(value = "controller entering into register service")
+    @MessageInterface
     @Override
-    public ResponseEntity<Map<String,String>> registerUser(OTPModel otpModel) {
+    public ResponseEntity<Map<String,Object>> registerUser(OTPModel otpModel) {
         String otp = Objects.requireNonNull(cacheManager.getCache("otpCache"))
                 .get(otpModel.getEmail(),String.class);
-
-        if(otp != null && !otp.equals(otpModel.getOtp())) {
+        otp = otp != null ? otp : "1";
+        if(!otp.equals(otpModel.getOtp())) {
+            logger.info("OTP did not match. USER : {}", otpModel.getEmail());
             return ResponseEntity.ok(
                     responseHelperMethods.getRegistrationResponseHelper(
                             OTP_NOT_MATCH,
@@ -82,25 +88,33 @@ public class UserRegistrationService implements UserRegistrationServicePrint {
         try {
             assert userModel != null;
         }catch(Exception ignored) {
+            logger.error("exception raised due to OTP `Not Available or Timeout`. USER : {}", otpModel.getEmail());
             return ResponseEntity.ok(responseHelperMethods.getRegistrationResponseHelper(
                     SOMETHING_WENT_WRONG,
                     "500",
                     LocalDateTime.now()
             ));
         }
-        Map<String,String> result;
+
+        Map<String,Object> result;
+        System.out.println("Before : "+userModel.getUserDetailsModel().getPassword());
         userModel.getUserDetailsModel()
                     .setPassword(passwordEncoder.encode(
                             userModel.getUserDetailsModel().getPassword()
                     ));
-
+        System.out.println("After: " + userModel.getUserDetailsModel().getPassword());
         userModel.setCreatedAt(LocalDateTime.now());
         userRepository.save(userModel);
+        Objects.requireNonNull(cacheManager.getCache("otpCache"))
+                .evict(otpModel.getEmail());
+
+        Objects.requireNonNull(cacheManager.getCache("userCache"))
+                .evict(otpModel.getEmail());
         result = responseHelperMethods.getRegistrationResponseHelper(
                     USER_CREATED_SUCCESSFULLY,
                     "201",
                     userModel.getCreatedAt());
-
+        logger.info("OTP verification is successful. User Id Created. USER : {}", otpModel.getEmail());
         return ResponseEntity.ok(result);
     }
 

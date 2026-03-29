@@ -66,10 +66,19 @@ public class UserModel {
     @Column(name = "user_timestamp")
     private LocalDateTime createdAt;
 
+
     @Embedded
     @NotNull(message = "Please fill the all required fields.")
     @Valid
     private UserDetailsModel userDetailsModel;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     /**
      * MethodName - getFirstName

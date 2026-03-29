@@ -5,6 +5,8 @@ import com.exp.backend.model.UserModel;
 import com.exp.backend.template.interfaces.OTPServicePrint;
 import com.exp.backend.template.interfaces.UserRegistrationServicePrint;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 @Validated
 public class UserController {
+    private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     /**
      * Variables - userRegistrationServicePrint, otpServicePrint
@@ -56,7 +59,7 @@ public class UserController {
      */
 
     @PostMapping("/otp/verify")
-    public ResponseEntity<Map<String,String>> otpVerification(@Valid
+    public ResponseEntity<Map<String,Object>> otpVerification(@Valid
             @RequestBody UserModel userModel) {
         return otpServicePrint.otpGenerator(userModel);
     }
@@ -71,7 +74,7 @@ public class UserController {
      */
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String,String>> userRegistrationAPI(@Valid
+    public ResponseEntity<Map<String,Object>> userRegistrationAPI(@Valid
             @RequestBody OTPModel otpModel) {
         return userRegistrationServicePrint.registerUser(otpModel);
     }

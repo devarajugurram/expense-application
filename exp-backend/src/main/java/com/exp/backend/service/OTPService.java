@@ -1,10 +1,12 @@
 package com.exp.backend.service;
 
-import com.exp.backend.aop.messageInterface;
+import com.exp.backend.aop.MessageInterface;
 import com.exp.backend.model.UserModel;
 import com.exp.backend.repo.UserRepository;
 import com.exp.backend.template.helpers.ResponseHelperMethods;
 import com.exp.backend.template.interfaces.OTPServicePrint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
@@ -35,7 +37,7 @@ import static com.exp.backend.template.strings.TemplateStrings.OTP_EMAIL_SUFFIX;
 @Service
 public class OTPService implements OTPServicePrint {
 
-
+    private final Logger logger = LoggerFactory.getLogger(OTPService.class);
     /**
      * Variables - cacheManager, javaMailSender, responseHelperMethods, userRepository
      * Data Types - CacheManager, JavaMailSender, ResponseHelperMethods, UserRepository
@@ -71,12 +73,13 @@ public class OTPService implements OTPServicePrint {
      * @return ResponseEntity It contains response in the form of HashMap.
      *
      */
-    @messageInterface("controller entering into otp service")
+    @MessageInterface
     @Override
-    public ResponseEntity<Map<String,String>> otpGenerator(UserModel userModel) {
+    public ResponseEntity<Map<String,Object>> otpGenerator(UserModel userModel) {
 
         String email = userModel.getEmail();
         if(userExistOrNot(email)) {
+            logger.error("user already exist with email. USER : {}", userModel.getEmail());
             return ResponseEntity.ok(responseHelperMethods
                     .getRegistrationResponseHelper(
                             USER_ALREADY_EXIST,
@@ -84,6 +87,14 @@ public class OTPService implements OTPServicePrint {
                             LocalDateTime.now()
                     ));
         }
+
+        /**
+         *
+         *
+         *
+         *
+         */
+
         Objects.requireNonNull(cacheManager.getCache("userCache")).put(email,userModel);
         String otp = String.valueOf(100000 + new Random().nextInt(900000));
         Objects.requireNonNull(cacheManager.getCache("otpCache")).put(email,otp);
@@ -97,15 +108,34 @@ public class OTPService implements OTPServicePrint {
             );
 
             javaMailSender.send(simpleMailMessage);
+            logger.info("mail Sent to user for OTP verification is successful. USER : {}",userModel.getEmail());
+
+
+            /**
+             *
+             *
+             *
+             */
+
         }catch(RuntimeException exception) {
-            Map<String,String> res = responseHelperMethods
+            Map<String,Object> res = responseHelperMethods
                     .getRegistrationResponseHelper(
                             EMAIL_NOT_FOUND,
                             "404",
                             LocalDateTime.now()
                      );
+            logger.error("OTP is not sent user due to internal issue. USER : {}",userModel.getEmail());
             return ResponseEntity.ok(res);
         }
+
+
+        /**
+         *
+         *
+         *
+         *
+         */
+
         return ResponseEntity.ok(responseHelperMethods
                 .getRegistrationResponseHelper(
                         OTP_SENT_SUCCESSFULLY,
@@ -123,6 +153,7 @@ public class OTPService implements OTPServicePrint {
 
     private boolean userExistOrNot(String email) {
         Optional<UserModel> userModel = userRepository.findByEmail(email);
+        logger.info("user Exist or Not : {}",userModel.isPresent());
         return userModel.isPresent();
     }
 

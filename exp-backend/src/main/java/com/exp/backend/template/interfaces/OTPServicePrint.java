@@ -19,5 +19,5 @@ public interface OTPServicePrint {
      * @param userModel It holds data in the form of object.
      * @return ResponseEntity method respond in the form of Map.
      */
-    ResponseEntity<Map<String,String>> otpGenerator(UserModel userModel);
+    ResponseEntity<Map<String,Object>> otpGenerator(UserModel userModel);
 }

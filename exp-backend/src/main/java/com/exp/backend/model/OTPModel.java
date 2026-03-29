@@ -24,7 +24,6 @@ public class OTPModel {
     @Email
     @NotBlank(message = "Something went wrong!")
     private String email;
-    @Size(min = 6,max = 6)
     @NotBlank(message = "Something went wrong!")
     private String otp;
 

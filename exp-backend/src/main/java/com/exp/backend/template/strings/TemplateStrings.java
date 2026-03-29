@@ -1,5 +1,7 @@
 package com.exp.backend.template.strings;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * ClassName - TemplateStrings
  * This class contains the data templates.
@@ -21,4 +23,12 @@ public class TemplateStrings {
             "Please enter this OTP to continue with your application. This code is valid for a limited time.\n\n" +
             "If you did not request this, please ignore this email.\n\n" +
             "Thanks & Regards,\nExpense Team";
+
+
+    public static final String EXPENSE_CREATED = "Expense Created Successfully.";
+    public static final String EXPENSE_NOT_CREATED = "Expense Not Created.";
+
+    public static final String EXPENSE_NOT_AVAILABLE = "Expense Not Available";
+    public static final String EXPENSE_UPDATED_SUCCESSFULLY =  "Expense Updated Successfully";
+    public static final String EXPENSE_DELETED_SUCCESSFULLY = "Expense Deleted Successfully";
 }

@@ -37,4 +37,8 @@ build/
 
 
 ### pom xml
+pom.xml
 src/main/resources/application.properties
+.gitattributes
+.gitignore
+logs
